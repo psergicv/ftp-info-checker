@@ -27,6 +27,4 @@ A Python script for scanning FTP servers to check if the FTP port is open, retri
 ## Disclaimer
 This script is intended for educational purposes and ethical testing only. Do not use it to scan IPs or systems without explicit permission from their owners.
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
    
