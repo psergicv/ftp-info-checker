@@ -2,7 +2,68 @@ import socket
 from ftplib import FTP, FTP_TLS, error_perm
 import datetime
 from concurrent.futures import ThreadPoolExecutor
+import os
 
+
+def check_folder_content(ftp, folder=""):
+    """
+    Allows user to navigate through folders on the FTP server
+    """
+    current_path = folder or "/"
+    os.makedirs("data", exist_ok=True)
+
+    while True:
+        print(f"\nCurrent Directory: {current_path}")
+        try:
+            ftp.cwd(current_path)
+            items = []
+            ftp.retrlines('LIST', items.append)
+
+            directories, files = [], []
+            print("\nContents:")
+            for idx, item in enumerate(items, start=1):
+                parts = item.split(maxsplit=8) # Split LIST output
+                name = parts[-1] # File or Directory name
+                is_directory = item.startswith("d") # Check if it is a directory
+                if is_directory:
+                    directories.append(name)
+                    print(f"{idx}. [DIR] {name}")
+                else:
+                    files.append(name)
+                    print(f"{idx}. [FILE] {name}")
+
+            # What the user is going to do?
+            print("\nOptions:")
+            print("[0] Go back to the parent directory")
+            print("[1-n] Open folder by number (if applicable")
+            print("[d] Download file by number")
+            print("[q] Quit navigation")
+
+            choice = input("Enter your choice: ").strip()
+            if choice.lower() == "q":
+                print("Exiting folder navigation.")
+                break
+            elif choice == "0":
+                current_path = "../"
+            elif choice == "d":
+                # Ask to download a file
+                file_choice = input("Enter file number to download: ").strip()
+                if file_choice.isdigit() and 1 <= int(file_choice) <= len(files):
+                    selected_file = files[int(file_choice) - 1]
+                    download_path = os.path.join("data", selected_file)
+                    with open(download_path, "wb") as f:
+                        ftp.retrbinary(f"RETR {selected_file}", f.write)
+                    print(f"File '{selected_file}' downloaded to 'data/{selected_file}'.")
+                else:
+                    print("Invalid file choice. Please try again.")
+            elif choice.isdigit() and 1 <= int(choice) <= len(items):
+                selected_directory = directories[int(choice) - 1]
+                current_path = f"{current_path.rstrip(f'/')}/{selected_directory}"
+            else:
+                print("Invalid choice. Please try again.")
+        except Exception as e:
+            print(f"Error navigating folder: {e}")
+            break
 
 # Check FTP details for a given IP address
 def check_ftp(ip):
@@ -45,6 +106,12 @@ def check_ftp(ip):
         ftp.retrlines('LIST', directories.append)
         for directory in directories:
             log(directory)
+        print("Directories retrieved successfully.")
+
+        # Ask user if they want to explore the folders
+        explore = input("Would you like to explore the folders content? (y/n): ").strip().lower()
+        if explore == "y":
+            check_folder_content(ftp)
         ftp.quit()
         return
     except error_perm as e:
@@ -58,7 +125,7 @@ def check_ftp(ip):
     default_credentials = [
         ('admin', 'admin'),
         ('ftp', 'ftp'),
-        ('anonympus', ''),
+        ('anonymous', ''),
         ('user', 'pass'),
         ('anonymous', 'anonymous'),
         ('guest', 'guest'),
