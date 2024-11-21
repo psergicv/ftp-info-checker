@@ -24,6 +24,11 @@ A Python script for scanning FTP servers to check if the FTP port is open, retri
 
 3. Enter a single IP, multiple IPs (comma-separated), or a file containing IPs.
 
+
+## Update 1
+- Added the possibility to navigate through FTP folders after a successfull connection
+- Added the possibility to download the files from folders
+
 ## Disclaimer
 This script is intended for educational purposes and ethical testing only. Do not use it to scan IPs or systems without explicit permission from their owners.
 
